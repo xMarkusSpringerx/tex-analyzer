@@ -1,14 +1,28 @@
 files = []
 
 
-class FileReader
+class WordObj
 
+  attr_accessor :word, :type
+
+  def initialize(word, format)
+    @word = word
+    @format   = format
+  end
+
+
+end
+
+
+
+
+
+class FileReader
 
   def initialize(filepath)
     @filepath = filepath
     @words = Hash.new
     @format_constants = ['enquote', 'texttt', 'textbf', 'section', 'subsection']
-
   end
 
   def readFile
@@ -16,40 +30,15 @@ class FileReader
     begin
       file = File.new(@filepath, "r")
 
-      matches = file.read.scan(/\\\w+{\w+}/)
 
-      matches.each do |match|
+      #All words
+      wordAry = splitStringInArray(file.read)
 
-        text = match.scan(/\w*}/).first.chop
+      # Clean word array
+      wordAry = cleanWords(wordAry)
 
-        format = match.scan(/\w*{/).first.chop
-
-
-        originalText = text
-
-        text = formatValue(text)
-
-
-        if @format_constants.include? format
-          puts text + ": " + format
-          if (@words[text])
-            # Already exists --> check, how it's written
-
-            if addToHash(text, originalText)
-              @words[text][originalText] += 1
-            else
-              @words[text][originalText] = 1
-            end
-
-          else
-            @words[text] = {}
-            @words[text][originalText] = 1
-
-          end
-
-        end
-
-
+      wordAry.each do |word|
+        puts word
       end
 
       file.close
@@ -60,21 +49,27 @@ class FileReader
 
   end
 
-  def addToHash text, originalText
-    @words[text].each do |spelling, key|
-      if spelling == originalText
-        result = false
-        return result
-      end
-    end
-
-    return true
-  end
 
   def formatValue text
     text = text.downcase
     text = text.strip
     return text
+  end
+
+  def splitStringInArray string
+    result = []
+    string.strip.split(" ").each do |word|
+      result.push(word)
+    end
+    return result
+  end
+
+  def cleanWords wordAry
+
+    wordAry.map! {|word|
+      word.tr(',', '').tr('.', '').tr(':', '').tr(';', '')
+    }
+    return wordAry
   end
 
 end
